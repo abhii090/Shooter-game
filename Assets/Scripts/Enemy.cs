@@ -35,10 +35,18 @@ public class Enemy : MonoBehaviour
     }
 
     private void GetTarget () {
+        if (GameObject.FindGameObjectWithTag("Player")) {
+            target = GameObject.FindGameObjectWithTag("Player").transform;
+        }
 
-     target = GameObject.FindGameObjectWithTag("Player").transform;
+     
 
     }
     
-    
-  }
+    private void OnCollisionEnter2D(Collision2D other) {
+        if (other.gameObject.CompareTag("Player")) {
+            Destroy(other.gameObject);
+            target = null;
+        }
+    }
+}
