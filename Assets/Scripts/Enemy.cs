@@ -47,6 +47,9 @@ public class Enemy : MonoBehaviour
         if (other.gameObject.CompareTag("Player")) {
             Destroy(other.gameObject);
             target = null;
+        }else if (other.gameObject.CompareTag("Bullet")) {
+            Destroy(other.gameObject);
+            Destroy(gameObject);
         }
     }
 }
