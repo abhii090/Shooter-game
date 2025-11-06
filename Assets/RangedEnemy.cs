@@ -35,7 +35,7 @@ public class RangedEnemy : MonoBehaviour
             RotateTowardsTarget();
         }
 
-        if (Vector2.Distance(target.position, transform.position) <= distanceToStop) {
+        if (target != null && Vector2.Distance(target.position, transform.position) <= distanceToStop) {
             shoot();
         }
 
