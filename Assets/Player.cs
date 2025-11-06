@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -59,4 +60,14 @@ public class Player : MonoBehaviour
     {
         Instantiate(bulletPrefab, FiringPoint.position, FiringPoint.rotation);
     }
+
+   private void OnCollisionEnter2D (Collision2D other)
+    {
+        if(other.gameObject.CompareTag("EnemyBullet"))
+        {
+            Destroy(gameObject);
+        }
+    }
+
 }
+  
