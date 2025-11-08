@@ -48,6 +48,7 @@ public class Enemy : MonoBehaviour
             Destroy(other.gameObject);
             target = null;
         }else if (other.gameObject.CompareTag("Bullet")) {
+            LevelManager.manager.IncreaseScore(3);
             Destroy(other.gameObject);
             Destroy(gameObject);
         }

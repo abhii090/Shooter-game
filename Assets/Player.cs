@@ -63,8 +63,10 @@ public class Player : MonoBehaviour
 
    private void OnCollisionEnter2D (Collision2D other)
     {
+        Debug.Log("OnCollisionEnter2D :: Enter");
         if(other.gameObject.CompareTag("EnemyBullet"))
         {
+            Debug.Log("OnCollisionEnter2D :: with enemy bulltet");
             LevelManager.manager.GameOver();
             Destroy(gameObject);
         }
