@@ -66,6 +66,6 @@ public class MenuManager : MonoBehaviour
     {
         coinText.text = "Coins: " + coins.ToString();
         entryFeeText.text = "Entry Fee: " + entryFee.ToString();
-        entryFeeText.color = Color.white; // reset color if previously red
+        entryFeeText.color = Color.black; // reset color if previously red
     }
 }
