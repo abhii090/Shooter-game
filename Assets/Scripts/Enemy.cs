@@ -47,8 +47,19 @@ public class Enemy : MonoBehaviour
         if (other.gameObject.CompareTag("Player")) {
             Destroy(other.gameObject);
             target = null;
+<<<<<<< HEAD
         }else if (other.gameObject.CompareTag("Bullet")) {
             LevelManager.manager.IncreaseScore(3);
+=======
+
+        }else if (other.gameObject.CompareTag("Bullet")) {
+
+            LevelManager.manager.IncreaseScore(3);
+
+        }else if(other.gameObject.CompareTag("Bullet"))
+        {
+
+>>>>>>> c0d6e54 (changes done)
             Destroy(other.gameObject);
             Destroy(gameObject);
         }
