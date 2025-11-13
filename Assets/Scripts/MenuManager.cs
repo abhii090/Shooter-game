@@ -1,57 +1,147 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 public class MenuManager : MonoBehaviour
 {
     [Header("UI References")]
-    public TextMeshProUGUI coinText;      // Shows current coins
-    public TextMeshProUGUI entryFeeText;  // Shows entry fee text
+    public TextMeshProUGUI coinText;
+    public TextMeshProUGUI entryFeeText;
+    public Button playButton;
+    public GameObject settingsPanel;
+    public Toggle bgmToggle;
+    public Toggle sfxToggle;
 
     private int coins;
     private int entryFee = 100;
 
     private void Start()
     {
-        // Load saved coins (default to 0)
+        // Safety: log which references are missing (helps debug NullReferenceException)
+        LogNullReferences();
+
+        // Initialize coins if needed
+        if (!PlayerPrefs.HasKey("Coins"))
+            PlayerPrefs.SetInt("Coins", 500);
+
         coins = PlayerPrefs.GetInt("Coins", 0);
         UpdateUI();
+
+        // Assign Play button safely
+        if (playButton != null)
+        {
+            // remove previous listeners to avoid duplicates
+            playButton.onClick.RemoveAllListeners();
+            playButton.onClick.AddListener(OnPlayButtonPressed);
+        }
+        else
+        {
+            Debug.LogWarning("[MenuManager] playButton is not assigned in the inspector.");
+        }
+
+        // Settings panel: ensure it's not null
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+
+        // Setup toggles only if they exist and AudioManager exists
+        if (bgmToggle != null)
+        {
+            bool isOn = AudioManager.instance != null ? AudioManager.instance.IsBGMEnabled() : true;
+            bgmToggle.isOn = isOn;
+            bgmToggle.onValueChanged.RemoveAllListeners();
+            bgmToggle.onValueChanged.AddListener(OnBgmToggleChanged);
+        }
+        else
+        {
+            Debug.Log("[MenuManager] bgmToggle not assigned (optional).");
+        }
+
+        if (sfxToggle != null)
+        {
+            bool isOn = AudioManager.instance != null ? AudioManager.instance.IsSFXEnabled() : true;
+            sfxToggle.isOn = isOn;
+            sfxToggle.onValueChanged.RemoveAllListeners();
+            sfxToggle.onValueChanged.AddListener(OnSfxToggleChanged);
+        }
+        else
+        {
+            Debug.Log("[MenuManager] sfxToggle not assigned (optional).");
+        }
+
+        // Start menu music if possible
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayMenuMusic();
+        }
     }
 
-    public void PlayGame(string sceneName)
+    private void LogNullReferences()
     {
+        if (coinText == null) Debug.LogError("[MenuManager] coinText is NULL. Assign it in the Inspector.");
+        if (entryFeeText == null) Debug.LogWarning("[MenuManager] entryFeeText is NULL. (optional but recommended)");
+        if (playButton == null) Debug.LogError("[MenuManager] playButton is NULL. Assign it in the Inspector.");
+        if (settingsPanel == null) Debug.LogWarning("[MenuManager] settingsPanel is NULL. (optional)");
+        if (bgmToggle == null) Debug.LogWarning("[MenuManager] bgmToggle is NULL. (optional)");
+        if (sfxToggle == null) Debug.LogWarning("[MenuManager] sfxToggle is NULL. (optional)");
+    }
+
+    private void OnPlayButtonPressed()
+    {
+        if (AudioManager.instance != null)
+            AudioManager.instance.PlayButtonClick();
+
         if (coins >= entryFee)
         {
-            // Deduct entry fee
             coins -= entryFee;
             PlayerPrefs.SetInt("Coins", coins);
             PlayerPrefs.Save();
 
-            SceneManager.LoadScene(sceneName);
+            // Optionally tell LevelManager to auto-start
+            PlayerPrefs.SetInt("StartGame", 1);
+            SceneManager.LoadScene("Game");
         }
         else
         {
-            Debug.Log("❌ Not enough coins to start the game!");
-            entryFeeText.text = "Not enough coins! Need " + entryFee;
-            entryFeeText.color = Color.red;
+            Debug.Log("Not enough coins to play.");
+            if (entryFeeText != null)
+            {
+                entryFeeText.text = "Not enough coins! Need " + entryFee;
+                entryFeeText.color = Color.red;
+            }
         }
+    }
+
+    private void OnBgmToggleChanged(bool on)
+    {
+        if (AudioManager.instance != null)
+            AudioManager.instance.SetBGMEnabled(on);
+
+        if (AudioManager.instance != null)
+            AudioManager.instance.PlayButtonClick();
+    }
+
+    private void OnSfxToggleChanged(bool on)
+    {
+        if (AudioManager.instance != null)
+            AudioManager.instance.SetSFXEnabled(on);
+
+        if (AudioManager.instance != null)
+            AudioManager.instance.PlayButtonClick();
     }
 
     private void Update()
     {
-        // Keyboard cheat: +1000 coins
+        // Optional cheat
         if (Input.GetKeyDown(KeyCode.C))
         {
             AddCoins(1000);
-            Debug.Log("💰 Cheat Activated! +1000 Coins");
         }
     }
 
-    // 👇 Button-based cheat: +1000 coins
     public void CheatAddCoinsButton()
     {
         AddCoins(1000);
-        Debug.Log("💵 Cheat Button Pressed! +1000 Coins");
     }
 
     private void AddCoins(int amount)
@@ -64,8 +154,13 @@ public class MenuManager : MonoBehaviour
 
     private void UpdateUI()
     {
-        coinText.text = "Coins: " + coins.ToString();
-        entryFeeText.text = "Entry Fee: " + entryFee.ToString();
-        entryFeeText.color = Color.black; // reset color if previously red
+        if (coinText != null)
+            coinText.text = "Coins: " + coins.ToString();
+
+        if (entryFeeText != null)
+        {
+            entryFeeText.text = "Entry Fee: " + entryFee.ToString();
+            entryFeeText.color = Color.black;
+        }
     }
 }

@@ -8,8 +8,8 @@ public class LevelManager : MonoBehaviour
     public static LevelManager manager;
 
     [Header("UI Elements")]
-    public GameObject endScreen; // used for both win/lose
-    public TextMeshProUGUI titleText;   // “You Won!” / “Game Over!”
+    public GameObject endScreen;
+    public TextMeshProUGUI titleText;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI highscoreText;
     public TextMeshProUGUI coinRewardText;
@@ -18,11 +18,10 @@ public class LevelManager : MonoBehaviour
     [Header("Game Data")]
     public Savedata data;
     public int score;
-    public int winScore = 50; // 👈 Win condition
+    public int winScore = 50;
     private int rewardAmount = 200;
     private int maxAttempts = 3;
     private int remainingAttempts;
-
     private bool isGameOver = false;
 
     private void Awake()
@@ -31,12 +30,13 @@ public class LevelManager : MonoBehaviour
         SaveSystem.Initialize();
         data = new Savedata(0);
 
-        // Load attempts
         remainingAttempts = PlayerPrefs.GetInt("Attempts", maxAttempts);
         UpdateAttemptsUI();
+
+        if (AudioManager.instance != null)
+            AudioManager.instance.PlayGameMusic(); // 🎵 Play game BGM
     }
 
-    // 🟥 LOSE CONDITION — called when player dies
     public void GameOver()
     {
         if (isGameOver) return;
@@ -46,28 +46,30 @@ public class LevelManager : MonoBehaviour
         PlayerPrefs.SetInt("Attempts", remainingAttempts);
         PlayerPrefs.Save();
 
-        ShowEndScreen(false); // false = lose
+        if (AudioManager.instance != null)
+            AudioManager.instance.PlayPlayerDeath(); // 🔊 Lose sound
+
+        ShowEndScreen(false);
     }
 
-    // 🟩 WIN CONDITION — called when player achieves a goal
     public void GameWin()
     {
         if (isGameOver) return;
         isGameOver = true;
 
-        ShowEndScreen(true); // true = win
-        StartCoroutine(ReturnToMenuAfterDelay()); // 👈 Auto return to Menu
+        if (AudioManager.instance != null)
+            AudioManager.instance.PlayWinSound(); // 🏆 Win sound
+
+        ShowEndScreen(true);
+        StartCoroutine(ReturnToMenuAfterDelay());
     }
 
     private void ShowEndScreen(bool won)
     {
         endScreen.SetActive(true);
-
-        // Title
         titleText.text = won ? "🏆 You Won!" : "💀 Game Over";
         titleText.color = won ? Color.green : Color.red;
 
-        // Score & Highscore
         scoreText.text = "Score: " + score.ToString();
 
         string loadedData = SaveSystem.Load("Save");
@@ -80,13 +82,11 @@ public class LevelManager : MonoBehaviour
         highscoreText.text = "Highscore: " + data.highscore.ToString();
         SaveSystem.Save("save", JsonUtility.ToJson(data));
 
-        // Handle reward only for win
         if (won)
             AddCoins(rewardAmount);
         else
             coinRewardText.text = "No Coins Earned";
 
-        // Handle attempts
         UpdateAttemptsUI();
 
         if (remainingAttempts <= 0 && !won)
@@ -111,14 +111,7 @@ public class LevelManager : MonoBehaviour
 
     public void ReplayGame()
     {
-        if (remainingAttempts > 0)
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
-        else
-        {
-            SceneManager.LoadScene("Menu");
-        }
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private void UpdateAttemptsUI()
@@ -127,22 +120,16 @@ public class LevelManager : MonoBehaviour
             attemptsText.text = "Attempts Left: " + remainingAttempts;
     }
 
-    // 🟢 Increase score and check win condition
     public void IncreaseScore(int amount)
     {
         score += amount;
-
-        // Check for win condition
         if (score >= winScore && !isGameOver)
-        {
             GameWin();
-        }
     }
 
-    // 🕒 Automatically return to Menu after win
     private IEnumerator ReturnToMenuAfterDelay()
     {
-        yield return new WaitForSeconds(5f); // Wait 5 seconds
+        yield return new WaitForSeconds(5f);
         SceneManager.LoadScene("Menu");
     }
 }
@@ -156,4 +143,3 @@ public class Savedata
         highscore = _hs;
     }
 }
-
